@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Jogo 2048 Clássico</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Fonte Moderna Google Fonts: Outfit -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="relative flex flex-col items-center justify-center p-3 sm:p-6 min-h-screen">
+
+    <!-- Canvas para Animação de Peças Caindo no Fundo -->
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- Luzes Neon Decorativas no Fundo -->
+    <div class="fixed -top-24 -left-24 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl pointer-events-none z-0"></div>
+    <div class="fixed -bottom-24 -right-24 w-96 h-96 bg-pink-600/20 rounded-full blur-3xl pointer-events-none z-0"></div>
+
+    <!-- TELA 1: MENU INICIAL (VISÍVEL POR PADRÃO) -->
+    <div id="main-menu" class="fixed inset-0 z-50 flex flex-col items-center justify-center p-6 transition-all duration-300">
+        <div class="glass-panel text-center max-w-sm w-full p-8 rounded-3xl flex flex-col items-center relative z-10">
+            
+            <!-- Logo do Jogo -->
+            <div class="inline-block p-5 bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 rounded-3xl mb-8 shadow-2xl shadow-indigo-500/50 transform hover:scale-105 transition-transform duration-300 border border-white/20">
+                <span class="text-6xl sm:text-7xl font-black tracking-wider text-white drop-shadow-md">2048</span>
+            </div>
+
+            <!-- Botões do Menu -->
+            <button onclick="startGame()" class="w-full btn-glow bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white font-black text-xl py-4 px-8 rounded-2xl shadow-xl shadow-indigo-500/40 mb-4 flex items-center justify-center gap-3 border border-white/20 cursor-pointer">
+                <svg class="w-7 h-7 fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                JOGAR
+            </button>
+
+            <button onclick="openHowToPlay()" class="w-full btn-glow bg-slate-900/80 border border-slate-700/80 text-slate-200 font-bold text-lg py-3.5 px-6 rounded-2xl shadow-md hover:bg-slate-800 mb-6 flex items-center justify-center gap-2 cursor-pointer">
+                <svg class="w-6 h-6 fill-current text-indigo-400" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 16h-2v-2h2v2zm1.07-7.75l-.9.92C12.45 11.9 12 12.5 12 14h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H7c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.04-.42 1.99-1.07 2.75z"/></svg>
+                Como Jogar
+            </button>
+
+            <!-- Recorde -->
+            <div class="flex items-center justify-between w-full bg-slate-950/60 border border-slate-800/80 rounded-2xl p-4 shadow-inner">
+                <span class="text-xs font-bold text-slate-400 tracking-wider">SEU RECORDE:</span>
+                <span id="menu-best-score" class="text-2xl font-black text-yellow-400">0</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL COMO JOGAR -->
+    <div id="how-to-play-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 backdrop-blur-md p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 text-slate-200 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            <button onclick="closeHowToPlay()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-2 rounded-xl bg-slate-800/50 cursor-pointer">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+
+            <div class="flex items-center gap-3 mb-4">
+                <div class="p-2 bg-indigo-500/20 text-indigo-400 rounded-xl">
+                    <svg class="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 16h-2v-2h2v2zm1.07-7.75l-.9.92C12.45 11.9 12 12.5 12 14h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H7c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.04-.42 1.99-1.07 2.75z"/></svg>
+                </div>
+                <h2 class="text-2xl font-black text-white">Como Jogar 2048</h2>
+            </div>
+
+            <div class="space-y-4 text-sm text-slate-300">
+                <div class="flex items-start gap-3 bg-slate-800/40 p-3 rounded-xl border border-slate-800">
+                    <span class="bg-indigo-600 text-white font-bold w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs">1</span>
+                    <p><strong>Mova as peças:</strong> No celular, use gestos de deslizar (swipe). No computador, use as <strong>Setas do Teclado</strong> ou <strong>WASD</strong>.</p>
+                </div>
+
+                <div class="flex items-start gap-3 bg-slate-800/40 p-3 rounded-xl border border-slate-800">
+                    <span class="bg-indigo-600 text-white font-bold w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs">2</span>
+                    <p><strong>Combine Números:</strong> Peças com o mesmo valor que se chocar se somam em uma só (2+2=4, 4+4=8, etc).</p>
+                </div>
+
+                <div class="flex items-start gap-3 bg-slate-800/40 p-3 rounded-xl border border-slate-800">
+                    <span class="bg-indigo-600 text-white font-bold w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs">3</span>
+                    <p><strong>Objetivo:</strong> Crie a peça de valor <strong>2048</strong>! Você pode continuar jogando para tentar bater seu recorde.</p>
+                </div>
+            </div>
+
+            <button onclick="closeHowToPlay()" class="w-full mt-6 bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold py-3 rounded-xl cursor-pointer">Entendi, Vamos Jogar!</button>
+        </div>
+    </div>
+
+    <!-- TELA 2: TELA DO JOGO (ESCONDIDA POR PADRÃO VIA CLASS 'hidden') -->
+    <div id="game-view" class="hidden w-full max-w-md flex flex-col items-center z-10 relative">
+        
+        <!-- Cabeçalho do Jogo -->
+        <header class="w-full flex items-center justify-between mb-4">
+            <div>
+                <h1 class="text-4xl font-black tracking-tight text-white flex items-center gap-2">
+                    2048
+                </h1>
+            </div>
+
+            <div class="flex gap-2">
+                <!-- Placares -->
+                <div class="relative bg-slate-900/80 border border-slate-800 rounded-2xl px-4 py-2 text-center min-w-[75px]">
+                    <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">SCORE</span>
+                    <span id="score" class="text-xl font-extrabold text-white">0</span>
+                    <div id="score-addition-container"></div>
+                </div>
+
+                <div class="bg-slate-900/80 border border-slate-800 rounded-2xl px-4 py-2 text-center min-w-[75px]">
+                    <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">RECORDE</span>
+                    <span id="best-score" class="text-xl font-extrabold text-yellow-400">0</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Barra de Controles -->
+        <div class="w-full flex justify-between items-center mb-4">
+            <div class="flex gap-2">
+                <button onclick="goToMenu()" class="btn-glow bg-slate-900/80 border border-slate-800 text-slate-300 p-2.5 rounded-xl hover:bg-slate-800 flex items-center justify-center cursor-pointer" title="Voltar ao Menu">
+                    <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+                </button>
+                <button id="sound-toggle-btn" onclick="toggleSound()" class="btn-glow bg-slate-900/80 border border-slate-800 text-slate-300 p-2.5 rounded-xl hover:bg-slate-800 flex items-center justify-center cursor-pointer" title="Alternar Som">
+                    <svg id="sound-icon" class="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                        <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="flex gap-2">
+                <button id="undo-btn" onclick="undoMove()" class="btn-glow bg-slate-900/80 border border-slate-800 text-slate-200 px-3.5 py-2 rounded-xl font-bold text-xs hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5 cursor-pointer" disabled>
+                    <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z"/></svg>
+                    Desfazer
+                </button>
+                <button onclick="restartGame()" class="btn-glow bg-indigo-600 border border-indigo-500 text-white px-3.5 py-2 rounded-xl font-bold text-xs hover:bg-indigo-500 flex items-center gap-1 cursor-pointer">
+                    Reiniciar
+                </button>
+            </div>
+        </div>
+
+        <!-- Tabuleiro -->
+        <div id="game-board">
+            <!-- Overlay de Vitória / Game Over -->
+            <div id="game-overlay" class="absolute inset-0 bg-slate-950/85 backdrop-blur-md rounded-3xl flex flex-col items-center justify-center opacity-0 pointer-events-none transition-all duration-300 z-30 p-6 text-center">
+                <h2 id="overlay-title" class="text-4xl font-black text-white mb-2">Fim de Jogo!</h2>
+                <p id="overlay-msg" class="text-slate-400 mb-6 font-semibold text-sm">Sem mais jogadas válidas.</p>
+                <div class="flex gap-3 w-full justify-center">
+                    <button id="keep-playing-btn" onclick="keepPlaying()" class="hidden btn-glow bg-slate-800 border border-slate-700 text-white px-5 py-3 rounded-xl font-bold text-sm cursor-pointer">
+                        Continuar
+                    </button>
+                    <button onclick="restartGame()" class="btn-glow bg-gradient-to-r from-indigo-500 to-pink-500 text-white px-6 py-3 rounded-xl font-black text-sm cursor-pointer">
+                        Jogar Novamente
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dicas de Controle -->
+        <div class="mt-4 text-center text-xs text-slate-400 font-medium">
+            <p class="hidden md:block">Use <strong>Setas</strong> ou <strong>WASD</strong> para mover as peças.</p>
+            <p class="md:hidden"><strong>Deslize o dedo</strong> na tela para mover as peças.</p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
